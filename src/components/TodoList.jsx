@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Flex, Box, Text } from '@blockstack/ui';
-import { useConnect } from '@blockstack/connect';
+import { userSession } from '../auth';
 import { Todo } from './Todo';
 import { v4 as uuid } from 'uuid';
 import { Sharer } from './Sharer';
-import { fetchTasks, saveTasks } from '../assets/data-store';
+import { fetchTasks, saveTasks } from '../storage';
+import exportFromJSON from 'export-from-json';
 
 export const TodoList = () => {
   const [tasks, setTasks] = useState([]);
@@ -12,8 +13,6 @@ export const TodoList = () => {
   const [isPublic, setIsPublic] = useState(false);
   const [username, setUsername] = useState('');
   const [notFound, setNotFound] = useState(false);
-  const { authOptions } = useConnect();
-  const { userSession } = authOptions;
 
   useEffect(() => {
     const username = document.location.pathname.split('/')[2];
@@ -31,7 +30,7 @@ export const TodoList = () => {
       setLoading(false);
     };
     doFetchTasks();
-  }, [userSession]);
+  }, []);
 
   const saveTask = ({ value, complete, index, remove }) => {
     setTasks(currentTasks => {
@@ -54,6 +53,10 @@ export const TodoList = () => {
     setTasks(tasks.concat([{ value: '', completed: false, id: uuid() }]));
   };
 
+  const exportData = ({ exportType }) => {
+    exportFromJSON({ data: tasks, fileName: 'todo', exportType: 'csv' });
+  };
+
   const todos = tasks.map((task, index) => (
     <Todo
       {...task}
@@ -65,20 +68,27 @@ export const TodoList = () => {
     />
   ));
 
+  const getDownload = () => {
+    if (loading) {
+      return '';
+    }
+    return 'Export as CSV';
+  };
+
   const getHeader = () => {
     if (loading) {
       return 'Loading...';
     }
     if (notFound) {
-      return '404. No to-do list found here.';
+      return '404. No todos found here.';
     }
     if (username) {
       if (isPublic) {
-        return `${username.split('.')[0]}'s to-do list`;
+        return `${username.split('.')[0]}'s todos`;
       }
-      return `${username.split('.')[0]}'s to-do list is private`;
+      return `${username.split('.')[0]}'s todos are private`;
     }
-    return 'My to-do list';
+    return 'My todos';
   };
 
   return (
@@ -90,6 +100,9 @@ export const TodoList = () => {
               {getHeader()}
             </Text>
           </Box>
+          <Text cursor="pointer" fontSize={1} color="blue" fontWeight="500" onClick={exportData}>
+            {getDownload()}
+          </Text>
           {!loading && !username && (
             <Sharer
               isPublic={isPublic}

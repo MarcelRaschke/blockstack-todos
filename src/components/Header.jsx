@@ -1,21 +1,16 @@
 import React from 'react';
 import { Flex, Box, Text } from '@blockstack/ui';
-import { useConnect } from '@blockstack/connect';
+import { getPerson, getUserData, userSession } from '../auth';
 import { Logo } from './icons/logo';
-import { Person } from 'blockstack';
 
 const Auth = () => {
-  const { authOptions } = useConnect();
-  const { userSession } = authOptions;
-
   if (!userSession.isUserSignedIn()) {
     return null;
   }
 
-  const userData = userSession.loadUserData();
-
   const Avatar = () => {
-    const person = new Person(userData.profile);
+    const person = getPerson();
+
     if (person.avatarUrl()) {
       return (
         <Box
@@ -37,7 +32,7 @@ const Auth = () => {
   return (
     <Box>
       <Avatar />
-      <Text fontWeight="500">{userData.username}</Text>
+      <Text fontWeight="500">{getUserData().username}</Text>
       <Text
         fontWeight="300"
         display="inline-block"
@@ -61,7 +56,7 @@ export const Header = () => {
       <Box alignItems onClick={() => (document.location = '/')} cursor="pointer">
         <Logo style={{ position: 'relative', top: '-1px' }} />
         <Text ml={2} display="inline-block" fontWeight="600">
-          To-do
+          Todos
         </Text>
       </Box>
       <Auth />
